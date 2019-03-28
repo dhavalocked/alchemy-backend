@@ -77,12 +77,54 @@ def outerRectangle(image):
 
 		dst = cv2.warpPerspective(orig,M,(800,800))
 		
-		# cv2.imshow("dst", dst)
-		# cv2.waitKey(0)
-		# cv2.destroyAllWindows()
+		mask = np.ones(orig.shape, np.uint8)
+		mask = cv2.bitwise_not(mask)
+		x_offset=y_offset=50
+		mask[y_offset:y_offset+dst.shape[0], x_offset:x_offset+dst.shape[1]] = dst
+		
+		return mask
+
+def correctprespective(image):
+		
+		# mapping target points to 800x800 quadrilateral
+		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+		#blurred = cv2.medianBlur(gray, 5)
+
+		# apply Canny Edge Detection
+	
+		edged = cv2.Canny(blurred, 0,50)
+		
+		orig_edged = edged.copy()
+ 
+		# find the contours in the edged image, keeping only the
+		# largest ones, and initialize the screen contour
+		(_,contours, _) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+		contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+		# get approximate contour
+		pt = []
+		largestctr=""
+		for c in contours:
+				p = cv2.arcLength(c, True)
+				approx = cv2.approxPolyDP(c, 0.02 * p, True)
+
+				if len(approx) == 4:
+						target = approx
+						#largestctr = ctr
+						break
+		orig = image.copy()
+		
+		approx = rectify(target)
+		
+		pts2 = np.float32([[0,0],[800,0],[800,800],[0,800]])
+
+		M = cv2.getPerspectiveTransform(approx,pts2)
+
+		dst = cv2.warpPerspective(image,M,(800,800))
 		
 		return dst
-
 
 def innerRectangles(dst):
 		names = []
@@ -208,7 +250,8 @@ def innerRectangles(dst):
 def getResponseFromImage(input_image):
 		success = False
 		image = cv2.imread("static/" + input_image)
-		dst = outerRectangle(image)
+		image = outerRectangle(image)
+		dst = correctprespective(image)
 
 		#qpts_data = pd.read_csv("question_data.csv")
 

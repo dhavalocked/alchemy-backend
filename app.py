@@ -28,8 +28,6 @@ app = Flask(__name__, instance_relative_config=True)
 from waitress import serve 
 
 
-serve(app, host='0.0.0.0', port=8080)
-
 app.config['UPLOADED_PHOTOS_DEST'] = 'static/'
 configure_uploads(app, photos)
 
