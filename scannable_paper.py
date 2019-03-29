@@ -232,7 +232,7 @@ def innerRectangles(dst):
 					elif (area >4600 and area<9000):
 						answers.append(roi)
 				
-					else:
+					elif (area >50000 and area <200000):
 						 questions.append(roi)
 		
 		print(len(answers))
