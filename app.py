@@ -86,6 +86,7 @@ def predict():
                     if q_types[i] == "omr":
                         img = cv2.imread(os.path.join('./answers',q_img)) 
                         detected_omr_ans = evaluateOmrQuestion(img);
+                        print("detected",detected_omr_ans)
                         responses.append(idx_char_omr[detected_omr_ans[0] ] )
 
                     if q_types[i] =="ocr":

@@ -163,7 +163,7 @@ def innerRectangles(dst):
 				point_list.append([x1,y1,width1,height1])
 
 		#filter necessary so that the big outer contour is not detected
-		point_array = [point for point in point_list if point[0] > 10]
+		point_array = [point for point in point_list if point[0] > 15]
 		duplicate_array = []
 		same_pt = []
 		point_array = sorted(point_array,key=lambda x: (x[1]))
@@ -209,7 +209,7 @@ def innerRectangles(dst):
 				x, y, width, height = point_array[i][0],point_array[i][1],point_array[i][2],point_array[i][3]
 				#if y < 720:
 				#cropping some padding which contains box lines
-				roi = dst[y:y+height, x:x+width]
+				roi = dst[y-3:y+height+3, x-5:x+width+5]
 				#cv2.rectangle(dst,(x,y),(x+width,y+height),(0,255,0),1)
 				#print(roi.shape)
 				#print("height - width {}".format(abs(height-width)))      
@@ -218,18 +218,25 @@ def innerRectangles(dst):
 				if height+30  >=width:
 						continue
 				#print("final area :: ", area)      
-				
+				# cv2.imshow('roi', roi)
+				# cv2.waitKey(0)
+				# cv2.destroyAllWindows()
 				os.path.join('.')       
 
 				if i==0 or i==1:
 						names.append(roi)
-
-				elif i>1 and area >5000 and area<9000:
+				
+				elif i>1:
+					if (area>9000 and area<20000) or area>200000:
+									continue
+					elif (area >4600 and area<9000):
 						answers.append(roi)
-
-				else:
-					 questions.append(roi)
-					 
+				
+					else:
+						 questions.append(roi)
+		
+		print(len(answers))
+		print(len(questions))
 		for i in range(len(names)):
 				if not os.path.isdir('name'):
 						os.makedirs('name')            
