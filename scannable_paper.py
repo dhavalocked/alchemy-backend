@@ -82,10 +82,18 @@ def outerRectangle(image):
 		x_offset=y_offset=50
 		mask[y_offset:y_offset+dst.shape[0], x_offset:x_offset+dst.shape[1]] = dst
 		
-		return dst
+	
+
+		return mask
+
 
 def correctprespective(image):
 		
+
+		#result2 = cv2.add(orig,result)
+		# cv2.imshow('image', image)
+		# cv2.waitKey(0)
+		# cv2.destroyAllWindows()#
 		# mapping target points to 800x800 quadrilateral
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -239,7 +247,7 @@ def innerRectangles(dst):
 				cv2.imwrite(os.path.join("questions", file_name), questions[i])
 				question_array_names.append(file_name);
 
-		return len(point_array), answers, question_array_names
+		return len(point_array), answers, question_array_names 
 
 								
 
@@ -248,7 +256,9 @@ def innerRectangles(dst):
 def getResponseFromImage(input_image):
 		success = False
 		image = cv2.imread("static/" + input_image)
-		dst = outerRectangle(image)
+		image = outerRectangle(image)
+		dst = correctprespective(image)
+
 		#dst = correctprespective(image)
 
 		#qpts_data = pd.read_csv("question_data.csv")
@@ -394,6 +404,7 @@ def evaluateOmrQuestion(image,row_count=2,x_response = ["A","B","C","D"],y_respo
 								found = True 
 						if found:break
 				
-		print("Final responses")
-		print(responses)
+		# print("Final responses")
+		# print(responses)
 		return responses
+
