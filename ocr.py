@@ -47,7 +47,7 @@ def ocr_prediction(image):
 
 			#print("Area:",cv2.contourArea(approx))
 			targetvec.append(approx)
-	
+			
 	m = list()
 	
    

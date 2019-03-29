@@ -99,3 +99,12 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Ignore folder named answers
+answers/
+
+# Ignore folder named name
+name/
+
+#Ignore folder named questions
+questions/

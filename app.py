@@ -25,7 +25,7 @@ photos = UploadSet('photos', IMAGES)
 # CONFIG
 app = Flask(__name__, instance_relative_config=True)
 
-from waitress import serve 
+#from waitress import serve 
 
 
 app.config['UPLOADED_PHOTOS_DEST'] = 'static/'
