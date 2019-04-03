@@ -184,7 +184,7 @@ def ocr_prediction(image):
 			print(characters[prob_list[0]],characters[prob_list[1]]," probs:: ",prob[0][prob_list[0]],prob[0][prob_list[1]])
 			responselist += characters[prob_list[0]]
 	return(responselist)
-	
+
 def rectify(h):
 		h = h.reshape((4,2))
 		hnew = np.zeros((4,2),dtype = np.float32)
@@ -522,9 +522,7 @@ def getBlob(im):
 				return item[1]
 
 		im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-		cv2.imshow("im_with_keypoints",im_with_keypoints)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
+		
 		li = []
 		for i in range(len(keypoints)):
 				print(i,"x:",keypoints[i].pt)
