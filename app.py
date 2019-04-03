@@ -31,7 +31,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.config['UPLOADED_PHOTOS_DEST'] = 'static/'
 configure_uploads(app, photos)
 
-#app.config.from_object(os.environ['APP_SETTINGS'])
+app.config.from_object(os.environ['APP_SETTINGS'])
 
 
 from tools import upload_file_to_s3,upload_filename_to_s3
