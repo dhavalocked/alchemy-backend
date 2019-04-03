@@ -613,20 +613,20 @@ def evaluateOmrQuestion(image,row_count=2,x_response = ["A","B","C","D"],y_respo
 		return responses
 
 
-success , answers, question_array_names = getResponseFromImage("test.jpg")
-q_types = ["ocr","ocr", "ocr", "omr","omr"]
-idx_char_omr = { 1 : "A", 2 : "B", 3 : "C", 4: "D"}
+# success , answers, question_array_names = getResponseFromImage("test.jpg")
+# q_types = ["ocr","ocr", "ocr", "omr","omr"]
+# idx_char_omr = { 1 : "A", 2 : "B", 3 : "C", 4: "D"}
 
-responses=[]
-for i in range(len(answers)):
-                    q_img = "answers"+str(i+1)+".png"
-                    if q_types[i] == "omr":
-                        img = cv2.imread(os.path.join('./answers',q_img)) 
-                        detected_omr_ans = evaluateOmrQuestion(img);
-                        print("detected",detected_omr_ans)
-                        #responses.append(idx_char_omr[detected_omr_ans[0] ] )
+# responses=[]
+# for i in range(len(answers)):
+#                     q_img = "answers"+str(i+1)+".png"
+#                     if q_types[i] == "omr":
+#                         img = cv2.imread(os.path.join('./answers',q_img)) 
+#                         detected_omr_ans = evaluateOmrQuestion(img);
+#                         print("detected",detected_omr_ans)
+#                         #responses.append(idx_char_omr[detected_omr_ans[0] ] )
 
-                    if q_types[i] =="ocr":
-                        img = cv2.imread(os.path.join('./answers',q_img))
-                        responses.append(ocr_prediction(img))
+#                     if q_types[i] =="ocr":
+#                         img = cv2.imread(os.path.join('./answers',q_img))
+#                         responses.append(ocr_prediction(img))
 
