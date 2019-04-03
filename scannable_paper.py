@@ -101,28 +101,24 @@ def outerRectangle(image):
     # order
     dst = np.array([
     [0, 0],
-    [maxHeight - 1, 0],
-    [maxHeight - 1, maxWidth - 1],
-    [0, maxWidth - 1]], dtype = "float32")
+    [maxWidth - 1, 0],
+    [maxWidth - 1, maxHeight - 1],
+    [0, maxHeight - 1]], dtype = "float32")
 
-    #pts2 = np.float32([[0,0],[800,0],[800,800],[0,800]])
+    pts2 = np.float32([[0,0],[800,0],[800,800],[0,800]])
 
     M = cv2.getPerspectiveTransform(approx,pts2)
 
-    dst = cv2.warpPerspective(orig,M,(maxWidth,maxHeight))
+    dst = cv2.warpPerspective(orig,M,(800, 800))
 
     mask = np.ones(orig.shape, np.uint8)
     mask = cv2.bitwise_not(mask)
     x_offset=y_offset=50
     mask[y_offset:y_offset+dst.shape[0], x_offset:x_offset+dst.shape[1]] = dst
-    edged = cv2.Canny(blurred, 0,50)
-
-    orig_edged = edged.copy()
 
 
     return mask
-
-
+    
 def correctprespective(image):
 
 
@@ -246,12 +242,12 @@ def innerRectangles(dst):
             #if y < 720:
             #cropping some padding which contains box lines
             roi = dst[y-3:y+height+3, x-5:x+width+5]
-            #cv2.rectangle(dst,(x,y),(x+width,y+height),(0,255,0),1)
-            #print(roi.shape)
-            #print("height - width {}".format(abs(height-width)))      
+#             cv2.rectangle(dst,(x,y),(x+width,y+height),(0,255,0),1)
+#             print(roi.shape)
+#             print("height - width {}".format(abs(height-width)))      
 
             area = height * width 
-            if height+70  >=width:
+            if height+30  >=width:
                     continue
             #print("final area :: ", area)      
 
@@ -265,8 +261,6 @@ def innerRectangles(dst):
                 if (area>9000 and area<20000) or area>200000:
                                 continue
                 elif (area >4500 and area<9000):
-                    print("area is" , area)
-                    print("height - width {}".format(abs(height-width)))
                     answers.append(roi)
 
                 elif (area >50000 and area <200000):
@@ -292,6 +286,7 @@ def innerRectangles(dst):
             question_array_names.append(file_name);
 
     return len(point_array), answers, question_array_names 
+
 
 
 
