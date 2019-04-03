@@ -184,6 +184,7 @@ def ocr_prediction(image):
 			print(characters[prob_list[0]],characters[prob_list[1]]," probs:: ",prob[0][prob_list[0]],prob[0][prob_list[1]])
 			responselist += characters[prob_list[0]]
 	return(responselist)
+	
 def rectify(h):
 		h = h.reshape((4,2))
 		hnew = np.zeros((4,2),dtype = np.float32)
@@ -200,275 +201,258 @@ def rectify(h):
 
 
 def outerRectangle(image):
-	 
 
-		height, width, channels = image.shape
-		if width > height:
-				image = cv2.transpose(image) 
-				image = cv2.flip(image,1)
 
-		# resize image so it can be processed
-		image = cv2.resize(image, (1600, 1200))  
-		
-		# creating copy of original image
-		orig = image.copy()
-		cv2.imshow('image', image)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
-		# convert to grayscale and blur to smooth
-		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    height, width, channels = image.shape
+    if width > height:
+            image = cv2.transpose(image) 
+            image = cv2.flip(image,1)
 
-		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-		#blurred = cv2.medianBlur(gray, 5)
+    # resize image so it can be processed
+    image = cv2.resize(image, (1600, 1200))  
 
-		#apply Canny Edge Detection
-		cv2.imshow('blurred', blurred)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
-	
-		edged = cv2.Canny(blurred, 0,50)
-		cv2.imshow("edged", edged)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
-		orig_edged = edged.copy()
- 
-		# find the contours in the edged image, keeping only the
-		# largest ones, and initialize the screen contour
-		(_,contours, _) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-		contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    # creating copy of original image
+    orig = image.copy()
+    # convert to grayscale and blur to smooth
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-		# get approximate contour
-		for c in contours:
-				p = cv2.arcLength(c, True)
-				approx = cv2.approxPolyDP(c, 0.02 * p, True)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    #blurred = cv2.medianBlur(gray, 5)
 
-				if len(approx) == 4:
-						target = approx
-						break
 
-		
-		# mapping target points to 800x800 quadrilateral
-		approx = rectify(target)
-		(tl, tr, br, bl) = approx
- 
-		# compute the width of the new image, which will be the
-		# maximum distance between bottom-right and bottom-left
-		# x-coordiates or the top-right and top-left x-coordinates
-		widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-		widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-		maxWidth = max(int(widthA), int(widthB))
-	 
-		# compute the height of the new image, which will be the
-		# maximum distance between the top-right and bottom-right
-		# y-coordinates or the top-left and bottom-left y-coordinates
-		heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-		heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-		maxHeight = max(int(heightA), int(heightB))
-	 
-		# now that we have the dimensions of the new image, construct
-		# the set of destination points to obtain a "birds eye view",
-		# (i.e. top-down view) of the image, again specifying points
-		# in the top-left, top-right, bottom-right, and bottom-left
-		# order
-		dst = np.array([
-		[0, 0],
-		[maxWidth - 1, 0],
-		[maxWidth - 1, maxHeight - 1],
-		[0, maxHeight - 1]], dtype = "float32")
- 
-		#pts2 = np.float32([[0,0],[800,0],[800,800],[0,800]])
+    edged = cv2.Canny(blurred, 0,50)
+    
+    orig_edged = edged.copy()
 
-		M = cv2.getPerspectiveTransform(approx,dst)
+    # find the contours in the edged image, keeping only the
+    # largest ones, and initialize the screen contour
+    (_,contours, _) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-		dst = cv2.warpPerspective(orig,M,(maxWidth, maxHeight))
-		
-		mask = np.ones(orig.shape, np.uint8)
-		mask = cv2.bitwise_not(mask)
-		x_offset=y_offset=50
-		mask[y_offset:y_offset+dst.shape[0], x_offset:x_offset+dst.shape[1]] = dst
-		edged = cv2.Canny(blurred, 0,50)
-		
-		orig_edged = edged.copy()
-	
+    # get approximate contour
+    for c in contours:
+            p = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.02 * p, True)
 
-		return dst
+            if len(approx) == 4:
+                    target = approx
+                    break
 
+
+    # mapping target points to 800x800 quadrilateral
+    approx = rectify(target)
+    (tl, tr, br, bl) = approx
+
+    # compute the width of the new image, which will be the
+    # maximum distance between bottom-right and bottom-left
+    # x-coordiates or the top-right and top-left x-coordinates
+    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    maxWidth = max(int(widthA), int(widthB))
+
+    # compute the height of the new image, which will be the
+    # maximum distance between the top-right and bottom-right
+    # y-coordinates or the top-left and bottom-left y-coordinates
+    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    maxHeight = max(int(heightA), int(heightB))
+
+    # now that we have the dimensions of the new image, construct
+    # the set of destination points to obtain a "birds eye view",
+    # (i.e. top-down view) of the image, again specifying points
+    # in the top-left, top-right, bottom-right, and bottom-left
+    # order
+    dst = np.array([
+    [0, 0],
+    [maxWidth - 1, 0],
+    [maxWidth - 1, maxHeight - 1],
+    [0, maxHeight - 1]], dtype = "float32")
+
+    #pts2 = np.float32([[0,0],[800,0],[800,800],[0,800]])
+
+    M = cv2.getPerspectiveTransform(approx,dst)
+
+    dst = cv2.warpPerspective(orig,M,(maxWidth, maxHeight))
+
+    mask = np.ones(orig.shape, np.uint8)
+    mask = cv2.bitwise_not(mask)
+    x_offset=y_offset=50
+    mask[y_offset:y_offset+dst.shape[0], x_offset:x_offset+dst.shape[1]] = dst
+    edged = cv2.Canny(blurred, 0,50)
+
+    orig_edged = edged.copy()
+
+
+    return dst
 
 def correctprespective(image):
-		
 
-		#result2 = cv2.add(orig,result)
-		# cv2.imshow('image', image)
-		# cv2.waitKey(0)
-		# cv2.destroyAllWindows()#
-		# mapping target points to 800x800 quadrilateral
-		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-		#blurred = cv2.medianBlur(gray, 5)
+    #result2 = cv2.add(orig,result)
+    # cv2.imshow('image', image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()#
+    # mapping target points to 800x800 quadrilateral
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-		# apply Canny Edge Detection
-	
-		edged = cv2.Canny(blurred, 0,50)
-		
-		# find the contours in the edged image, keeping only the
-		# largest ones, and initialize the screen contour
-		(_,contours, _) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-		contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    #blurred = cv2.medianBlur(gray, 5)
 
-		# get approximate contour
-		pt = []
-		largestctr=""
-		for c in contours:
-				p = cv2.arcLength(c, True)
-				approx = cv2.approxPolyDP(c, 0.02 * p, True)
+    # apply Canny Edge Detection
 
-				if len(approx) == 4:
-						target = approx
-						#largestctr = ctr
-						break
-		orig = image.copy()
-		
-		approx = rectify(target)
+    edged = cv2.Canny(blurred, 0,50)
 
-		#cv2.drawContours(orig,[target],-1,(0,255,0),1)		
-		x, y, w, h = cv2.boundingRect(approx)
-		dst = orig[y:y+h,x:x+w]
+    # find the contours in the edged image, keeping only the
+    # largest ones, and initialize the screen contour
+    (_,contours, _) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-		cv2.imshow('dst1', dst)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
-		return dst
+    # get approximate contour
+    pt = []
+    largestctr=""
+    for c in contours:
+            p = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.02 * p, True)
+
+            if len(approx) == 4:
+                    target = approx
+                    #largestctr = ctr
+                    break
+    orig = image.copy()
+
+    approx = rectify(target)
+
+    #cv2.drawContours(orig,[target],-1,(0,255,0),1)		
+    x, y, w, h = cv2.boundingRect(approx)
+    dst = orig[y:y+h,x:x+w]
+    return dst
 
 def innerRectangles(dst):
-		names = []
-		answers= []
-		questions = []
-		
-		gray = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
+    names = []
+    answers= []
+    questions = []
 
-		blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    gray = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
 
-		# apply Canny Edge Detection
-		edged = cv2.Canny(blurred, 0, 50)
-		cv2.imshow('edged', edged)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
-		dst2 = dst.copy()
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
 
-		(_,contours,_) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-		contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    # apply Canny Edge Detection
+    edged = cv2.Canny(blurred, 0, 50)
+    
+    dst2 = dst.copy()
 
-		targetvec = list()
-		for c in contours:
-				p = cv2.arcLength(c, True)
-				approx = cv2.approxPolyDP(c, 0.02 * p, True)
-				
-				if len(approx) == 4 and cv2.contourArea(approx) >4000: #parameter which needs to be tuned for separate area size
+    (_,contours,_) = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-						#print("Area:",cv2.contourArea(approx))
-						
-						targetvec.append(approx)
-	 
-		point_list = []
-		for c in targetvec:
-				x1, y1, width1, height1 = cv2.boundingRect                                                                                                                                                                                                                                                  (c)
-				point_list.append([x1,y1,width1,height1])
+    targetvec = list()
+    for c in contours:
+            p = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.02 * p, True)
 
-		#filter necessary so that the big outer contour is not detected
-		point_array = [point for point in point_list if point[0] > 15]
-		duplicate_array = []
-		same_pt = []
-		point_array = sorted(point_array,key=lambda x: (x[1]))
-		# for i in point_array:
-		# 		print ("Point Array :",i)
-				
-		for i in range(len(point_array)):
-				for j in range(i+1,len(point_array)):
-						#nearby contour points to remove
-						if point_array[i][1]+ 10 > point_array[j][1]:
-								point_array[j][1] = point_array[i][1]
+            if len(approx) == 4 and cv2.contourArea(approx) >4000: #parameter which needs to be tuned for separate area size
+
+                    #print("Area:",cv2.contourArea(approx))
+
+                    targetvec.append(approx)
+
+    point_list = []
+    for c in targetvec:
+            x1, y1, width1, height1 = cv2.boundingRect                                                                                                                                                                                                                                                  (c)
+            point_list.append([x1,y1,width1,height1])
+
+    #filter necessary so that the big outer contour is not detected
+    point_array = [point for point in point_list if point[0] > 15]
+    duplicate_array = []
+    same_pt = []
+    point_array = sorted(point_array,key=lambda x: (x[1]))
+    # for i in point_array:
+    # 		print ("Point Array :",i)
+
+    for i in range(len(point_array)):
+            for j in range(i+1,len(point_array)):
+                    #nearby contour points to remove
+                    if point_array[i][1]+ 10 > point_array[j][1]:
+                            point_array[j][1] = point_array[i][1]
 
 
-		point_array = sorted(point_array,key=lambda x: (x[1],x[0]))
+    point_array = sorted(point_array,key=lambda x: (x[1],x[0]))
 
-		for i in range(len(point_array)):
-				for j in range(i+1,len(point_array)):
-						if point_array[i][0]+ 10 > point_array[j][0] and  point_array[i][1]+ 10 > point_array[j][1] and point_array[i][2]+ 10 > point_array[j][2] and point_array[i][3]+ 10 > point_array[j][3] :
-								duplicate_array.append(j)
+    for i in range(len(point_array)):
+            for j in range(i+1,len(point_array)):
+                    if point_array[i][0]+ 10 > point_array[j][0] and  point_array[i][1]+ 10 > point_array[j][1] and point_array[i][2]+ 10 > point_array[j][2] and point_array[i][3]+ 10 > point_array[j][3] :
+                            duplicate_array.append(j)
 
 
-		# print("final size is : ", len(point_array))
+    # print("final size is : ", len(point_array))
 
-		# print("duplicate_array size is : ", len(duplicate_array))
+    # print("duplicate_array size is : ", len(duplicate_array))
 
-		#deleting from reverse based on index to avoid out of index issue 
-		duplicate_array = sorted(list(set(duplicate_array)),reverse=True)
-		# print("Points detected:",len(point_array),"Duplicate Points to be removed:",len(list(set(duplicate_array))))
-		# #print(duplicate_array)
-		# for i in duplicate_array:
-		# 		print ("Deleted",i)
+    #deleting from reverse based on index to avoid out of index issue 
+    duplicate_array = sorted(list(set(duplicate_array)),reverse=True)
+    # print("Points detected:",len(point_array),"Duplicate Points to be removed:",len(list(set(duplicate_array))))
+    # #print(duplicate_array)
+    # for i in duplicate_array:
+    # 		print ("Deleted",i)
 
-		for i in duplicate_array:
-				del point_array[i]
+    for i in duplicate_array:
+            del point_array[i]
 
-		for i in point_array:
-				x, y, width, height = i[0],i[1],i[2],[3]
+    for i in point_array:
+            x, y, width, height = i[0],i[1],i[2],[3]
 
 
 
-		for i  in range(0,len(point_array)):
+    for i  in range(0,len(point_array)):
 
-				x, y, width, height = point_array[i][0],point_array[i][1],point_array[i][2],point_array[i][3]
-				#if y < 720:
-				#cropping some padding which contains box lines
-				roi = dst[y-3:y+height+3, x-5:x+width+5]
-				#cv2.rectangle(dst,(x,y),(x+width,y+height),(0,255,0),1)
-				#print(roi.shape)
-				#print("height - width {}".format(abs(height-width)))      
+            x, y, width, height = point_array[i][0],point_array[i][1],point_array[i][2],point_array[i][3]
+            #if y < 720:
+            #cropping some padding which contains box lines
+            roi = dst[y-3:y+height+3, x-5:x+width+5]
+            #cv2.rectangle(dst,(x,y),(x+width,y+height),(0,255,0),1)
+            #print(roi.shape)
+            #print("height - width {}".format(abs(height-width)))      
 
-				area = height * width 
-				if height+30  >=width:
-						continue
-				#print("final area :: ", area)      
-				
+            area = height * width 
+            if height+30  >=width:
+                    continue
+            #print("final area :: ", area)      
 
-				os.path.join('.')       
 
-				if i==0 or i==1:
-						names.append(roi)
-				
-				elif i>1:
-					if (area>9000 and area<20000) or area>200000:
-									continue
-					elif (area >4500 and area<9000):
-						answers.append(roi)
-				
-					elif (area >50000 and area <200000):
-						 questions.append(roi)
-		
-		print(len(answers))
-		print(len(questions))
-		for i in range(len(names)):
-				if not os.path.isdir('name'):
-						os.makedirs('name')            
-				cv2.imwrite(os.path.join("name","name" + str(i+1)+".png"), names[i]) 
+            os.path.join('.')       
 
-		for i in range(len(answers)):
-				if not os.path.isdir('answers'):
-						os.makedirs('answers')             
-				cv2.imwrite(os.path.join("answers","answers" + str(i+1)+".png"), answers[i]) 
-		question_array_names = []
-		for i in range(len(questions)):     
-				if not os.path.isdir('questions'):
-						os.makedirs('questions')
-				file_name = str(int(calendar.timegm(time.gmtime()))) + "_question" + str(i+1)+".png"
-				cv2.imwrite(os.path.join("questions", file_name), questions[i])
-				question_array_names.append(file_name);
+            if i==0 or i==1:
+                    names.append(roi)
 
-		return len(point_array), answers, question_array_names 
+            elif i>1:
+                if (area>9000 and area<20000) or area>200000:
+                                continue
+                elif (area >4500 and area<9000):
+                    answers.append(roi)
 
-								
+                elif (area >50000 and area <200000):
+                     questions.append(roi)
+
+    print(len(answers))
+    print(len(questions))
+    for i in range(len(names)):
+            if not os.path.isdir('name'):
+                    os.makedirs('name')            
+            cv2.imwrite(os.path.join("name","name" + str(i+1)+".png"), names[i]) 
+
+    for i in range(len(answers)):
+            if not os.path.isdir('answers'):
+                    os.makedirs('answers')             
+            cv2.imwrite(os.path.join("answers","answers" + str(i+1)+".png"), answers[i]) 
+    question_array_names = []
+    for i in range(len(questions)):     
+            if not os.path.isdir('questions'):
+                    os.makedirs('questions')
+            file_name = str(int(calendar.timegm(time.gmtime()))) + "_question" + str(i+1)+".png"
+            cv2.imwrite(os.path.join("questions", file_name), questions[i])
+            question_array_names.append(file_name);
+
+    return len(point_array), answers, question_array_names 
+
 
 
 
